@@ -9,13 +9,14 @@ from cryptography.fernet import Fernet
 @click.command
 def genkey_cli() -> bytes:
     key = generate_key()
-    click.echo("Generated key:", err=True)
-    click.echo(key.decode())
+    decoded_key = key.decode()
+    click.echo("\n", err=True)
+    click.echo(decoded_key)
     click.echo(
-        "This key cannot be recovered, and so are any files encrypted with it; "
-        "Please save it now. \n"
-        "Tip: store the key in ENCRYPTHIS_KEY environment variable, "
-        "and encrypthis will use it automatically, without prompting.",
+        f"\n\n\x1b[1mNote: This key cannot be recovered\x1b[0m, and so are any files encrypted with it; Please save it now. \n\n"
+        f"You can store the key in ENCRYPTHIS_KEY environment variable, and it will be used automatically when encrypting/decrypting files.\n"
+        f"Run the following:\n\n"
+        f"export ENCRYPTHIS_KEY={decoded_key!r}\n",
         err=True,
     )
     return key

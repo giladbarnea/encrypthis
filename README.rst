@@ -8,8 +8,18 @@ A CLI to encrypt / decrypt files and directories (including images and non-text)
 
 Install
 ----
+::
 
-    pip install encrypthis
+    $ pip install encrypthis
+
+
+Usage
+----
+Once installed, 3 scripts are available:
+
+* ``genkey``: generates a new key and prints it to stdout.
+* ``encrypt PATH``: encrypts a file or directory.
+* ``decrypt PATH``: decrypts a file or directory.
 
 
 Examples
