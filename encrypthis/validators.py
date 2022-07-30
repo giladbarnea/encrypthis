@@ -39,10 +39,14 @@ def _resolve_nonexisting_out_path(
     return out_path
 
 
-def _validate_file_out_path(ctx: click.Context, param: click.Parameter, out_path: Path) -> Path:
+def _validate_file_out_path(
+    ctx: click.Context, param: click.Parameter, out_path: Path
+) -> Path:
     if ctx.params["in_path"].is_dir():
         raise click.BadParameter(
-            f"{param.human_readable_name} must be a directory if IN_PATH is a directory", ctx, param
+            f"{param.human_readable_name} must be a directory if IN_PATH is a directory",
+            ctx,
+            param,
         )
     if ctx.params.get("overwrite"):
         return out_path
@@ -51,7 +55,9 @@ def _validate_file_out_path(ctx: click.Context, param: click.Parameter, out_path
     raise click.Abort()
 
 
-def _validate_dir_out_path(ctx: click.Context, param: click.Parameter, out_path: Path) -> Path:
+def _validate_dir_out_path(
+    ctx: click.Context, param: click.Parameter, out_path: Path
+) -> Path:
     in_path: Path = ctx.params["in_path"]
     overwrite_out_paths = []
     simple_write_out_paths = []

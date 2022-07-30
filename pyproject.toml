@@ -18,10 +18,11 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-encrypt = 'encrypthis.encrypt:encrypt'
-decrypt = 'encrypthis.decrypt:decrypt'
+encrypthis = 'encrypthis.cli:main'
+encrypt = 'encrypthis.cli:encrypt_cli'
+decrypt = 'encrypthis.cli:decrypt_cli'
 genkey = 'encrypthis.util:genkey_cli'
 
 [tool.black]
-line-length = 100
+line-length = 90
 include = '\.pyi?$'

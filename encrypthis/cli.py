@@ -1,7 +1,7 @@
 #!.venv/bin/python3
 # see for salt+hash:
 # https://stackoverflow.com/a/23768422
-
+import sys
 import textwrap
 from pathlib import Path
 
@@ -12,7 +12,6 @@ from cryptography.fernet import Fernet
 from .validators import validate_in_path, validate_out_path
 
 ENCRYPT_EXTENSION_WHITELIST = {".py", ".txt", ".md", ".rst", ""}
-
 
 IN_PATH_HELP = (
     "Path to file or directory, or glob pattern, to encrypt. "
@@ -38,6 +37,10 @@ OUT_PATH:
     help=ENCRYPT_HELP,
 )
 @click.argument(
+    "command",
+    type=click.Choice(["encrypt", "decrypt"]),
+)
+@click.argument(
     "in_path",
     type=click.Path(exists=True, readable=True, resolve_path=True, path_type=Path),
     callback=validate_in_path,
@@ -57,19 +60,53 @@ OUT_PATH:
     show_envvar=True,
     callback=lambda ctx, param, value: value.encode(),
 )
-@click.option("-w", "--overwrite", is_flag=True, help="Overwrite existing files", is_eager=True)
-def encrypt(in_path: Path, out_path: Path, encryption_key: bytes, overwrite: bool = False):
+@click.option(
+    "-w", "--overwrite", is_flag=True, help="Overwrite existing files", is_eager=True
+)
+def main(
+    command, in_path: Path, out_path: Path, encryption_key: bytes, overwrite: bool = False
+):
     fernet: Fernet = Fernet(encryption_key)
+    if command == "encrypt":
+        encrypt(fernet, in_path, out_path, encryption_key, overwrite)
+    elif command == "decrypt":
+        decrypt(fernet, in_path, out_path, encryption_key, overwrite)
 
+
+def encrypt(
+    fernet: Fernet,
+    in_path: Path,
+    out_path: Path,
+    encryption_key: bytes,
+    overwrite: bool = False,
+):
     if not click.confirm(
-        f"Encrypting:  {str(in_path)!r}\n" f"Output path: {str(out_path)!r}\n" f"Continue?"
+        f"Encrypting:  {str(in_path)!r}\n"
+        f"Output path: {str(out_path)!r}\n"
+        f"Continue?"
     ):
         raise click.Abort()
-
     encrypted_data = get_encrypted_file_data(in_path, fernet)
-
-    write_encrypted_data(encrypted_data, out_path, in_path)
+    write_data(encrypted_data, out_path, in_path)
     click.echo(f"Encrypted {in_path} to {out_path}")
+
+
+def decrypt(
+    fernet: Fernet,
+    in_path: Path,
+    out_path: Path,
+    encryption_key: bytes,
+    overwrite: bool = False,
+):
+    if not click.confirm(
+        f"Decrypting:  {str(in_path)!r}\n"
+        f"Output path: {str(out_path)!r}\n"
+        f"Continue?"
+    ):
+        raise click.Abort()
+    decrypted_data = get_decrypted_file_data(in_path, fernet)
+    write_data(decrypted_data, out_path, in_path)
+    click.echo(f"Decrypted {in_path} to {out_path}")
 
 
 def get_encrypted_file_data(path, fernet: Fernet) -> bytes:
@@ -78,11 +115,17 @@ def get_encrypted_file_data(path, fernet: Fernet) -> bytes:
     return encrypted_data
 
 
-def write_encrypted_data(encrypted: bytes, out_path, in_path):
+def get_decrypted_file_data(path, fernet: Fernet) -> bytes:
+    bytes_content = Path(path).read_bytes()
+    decrypted_data = fernet.decrypt(bytes_content)
+    return decrypted_data
+
+
+def write_data(data: bytes, out_path, in_path):
     out_path = Path(out_path)
     if out_path.is_dir():
-        return Path(out_path / in_path.name).write_bytes(encrypted)
-    return Path(out_path).write_bytes(encrypted)
+        return Path(out_path / in_path.name).write_bytes(data)
+    return Path(out_path).write_bytes(data)
 
 
 def iter_encrypted_dir_files(in_path: Path, fernet: Fernet):
@@ -94,3 +137,17 @@ def iter_encrypted_dir_files(in_path: Path, fernet: Fernet):
         ):
             encrypted = get_encrypted_file_data(path, fernet)
             yield path, encrypted
+
+
+def encrypt_cli():
+    sys.argv.insert(1, "encrypt")
+    return main()
+
+
+def decrypt_cli():
+    sys.argv.insert(1, "decrypt")
+    return main()
+
+
+if __name__ == "__main__":
+    main()

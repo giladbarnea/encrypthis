@@ -35,7 +35,9 @@ def generate_key() -> bytes:
 def hash_password(password: str, salt: bytes = None) -> bytes:
     if salt is None:
         salt = os.urandom(16)
-    return hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations=100000)
+    return hashlib.pbkdf2_hmac(
+        "sha256", password.encode("utf-8"), salt, iterations=100000
+    )
 
 
 def password_ok(password: str, salt: bytes, pw_hash: bytes) -> bool:
